@@ -1,0 +1,25 @@
+.Card {
+  border: 2px solid #000000;
+  text-align: center;
+  width: 75px;
+  height: 110px;
+	margin-left: 20px;
+	margin-top: 20px;
+}
+
+.Card p {
+  margin: 0px;
+  line-height: 110px;
+}
+
+.Card-front {
+}
+
+.Card-back {
+	background-color: gray;
+}
+
+.clear {
+  visibility: hidden;
+}
+
