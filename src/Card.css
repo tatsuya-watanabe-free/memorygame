@@ -7,15 +7,21 @@
 	margin-top: 20px;
 }
 
-.Card p {
-  margin: 0px;
-  line-height: 110px;
+.red {
+  color: red;
 }
 
-.Card-front {
+.Card div {
+  margin: 0px auto;
+  width: 75px;
+  height: 55px;
+  font-size: 40px;
 }
 
-.Card-back {
+.open {
+}
+
+.back {
 	background-color: gray;
 }
 

@@ -4,33 +4,37 @@ import Card from './Card.js';
 
 function initializeCards () {
   const cards = [];
-  const suits = ["♠", "♥", "◆", "♣"];
-  const nums = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
-  for( var suit in suits ){
-    for( var num in nums ){
-      cards.push({"suit":suits[suit], "num":nums[num]});
+  for( let suit=0 ; suit < 4; suit++ ){
+    for( let num=0 ; num < 13; num++ ){
+      cards.push({
+        suit: suit,
+        num: num,
+        status: "back"
+      });
     }
   }
-  for (var fromIndex in cards){
+  return shuffle(cards);
+}
+
+function shuffle(cards) {
+  for (var i=0; i<200; i++){
     var toIndex = Math.floor(Math.random() * cards.length);
     var tmp = cards[toIndex];
+    var fromIndex = i % cards.length;
     cards[toIndex] = cards[fromIndex];
     cards[fromIndex] = tmp;
   }
-
   return cards;
 }
 
 export default function Field () {
-  const cards = useRef(initializeCards());
-  const openedIndex = useRef(new Array());
-  const closeFuncs = useRef(new Array());
-  const clearFuncs = useRef(new Array());
-
+  const [cards, setCards] = useState(initializeCards);
+  const openedIndex = useRef([]);
+  const waiting = useRef(false);
   const Cards = [];
-  for( var index in cards.current){
-    Cards.push(<Card card={cards.current[index]} index={index} key={index} onClick={open} />)
+  for( var index in cards){
+    Cards.push(<Card card={cards[index]} index={index} key={index} onClick={open} />)
   }
 
   return (
@@ -39,36 +43,40 @@ export default function Field () {
     </div>
   )
 
-  function open(index, close, clear){
+  function open(index){
+    if (waiting.current){ return false; }
+    if (cards[index].status !== "back") { return false;}
+    waiting.current = true;
+    openedIndex.current.push(index);
+    let nextCards = cards.slice();
+    nextCards[index]["status"] = "open";
+    setCards(nextCards);
     if (openedIndex.current.length > 1){
-      cardCheck();
+      setTimeout(cardCheck, 500);
       return false;
     }
-    openedIndex.current.push(index);
-    closeFuncs.current.push(close);
-    clearFuncs.current.push(clear);
+    waiting.current = false;
     return true;
-  }
-  function Wait( sec ) {
-    let startTime = performance.now();
-    while (performance.now() - startTime < sec * 1000) {
-    }
-  }
-  function reset(){
-    closeFuncs.current.forEach((func) => func());
-    openedIndex.current = [];
-    closeFuncs.current = [];
-    clearFuncs.current = [];
   }
 
   function cardCheck() {
-    const card1 = cards.current[openedIndex.current[0]];
-    const card2 = cards.current[openedIndex.current[1]];
+    let card1Index = openedIndex.current[0];
+    let card2Index = openedIndex.current[1];
+    const card1 = cards[card1Index];
+    const card2 = cards[card2Index];
+    let nextCards = cards.slice();
     if( card1.num === card2.num ){
-      clearFuncs.current.forEach((func) => func());
+      card1.status = "clear";
+      card2.status = "clear";
+    }else{
+      card1.status = "back";
+      card2.status = "back";
     }
-    Wait(2);
-    reset();
+    nextCards[card1Index] = card1;
+    nextCards[card2Index] = card2;
+    setCards(nextCards);
+    waiting.current = false;
+    openedIndex.current = [];
     return false;
   }
 }

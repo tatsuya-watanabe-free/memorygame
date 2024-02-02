@@ -1,30 +1,32 @@
-import { useState } from "react";
 import './Card.css';
 
 export default function Card({index, card, onClick}) {
+  const suits = ["♠", "♣", "♥", "◆"];
+  const nums = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
-  const [open, setOpen] = useState(false);
-  const [clear, setClear] = useState(false);
-
-  function Open() {
-    if( open ){ return false; }
-      setOpen(true);
-    if (onClick(index, Close, Clear)){
-      console.log("setOpen");
-    }
+  let cardInfo = [];
+  let color;
+  switch(card.suit) {
+    case 0:
+    case 1:
+      color = "black";
+      break;
+    case 2:
+    case 3:
+      color = "red";
+      break;
+    default:
+      break;
   }
-
-  function Close() {
-    setOpen(false);
+  let keyBase = ""+card.suit+card.num;
+  if (card.status === "open"){
+    cardInfo.push(<div key={keyBase+"suit"}>{suits[card.suit]}</div>);
+    cardInfo.push(<div key={keyBase+"num"}>{nums[card.num]}</div>);
+    
   }
-
-  function Clear() {
-    setClear(true);
-  }
-
   return (
-    <div className={"Card" + (open ? " Card-front" : " Card-back") + (clear ? " clear" : "")} onClick={Open}>
-      <p>{open ? card.suit + " " + card.num: ""}</p>
+    <div className={"Card " + card.status + " " + color} onClick={() => onClick(index)}>
+      {cardInfo}
     </div>
   );
 }
