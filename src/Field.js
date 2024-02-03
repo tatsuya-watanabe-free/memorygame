@@ -1,6 +1,18 @@
-import { useState, useRef } from "react";
+import { useRef, useReducer } from "react";
 import './Field.css';
 import Card from './Card.js';
+
+const CARD_ACTION = {
+  OPEN: "open",
+  CLOSE: "close",
+  CLEAR: "clear"
+}
+
+const CARD_STATUS = {
+  OPEN: "open",
+  BACK: "back",
+  CLEAR: "clear"
+}
 
 function initializeCards () {
   const cards = [];
@@ -10,7 +22,7 @@ function initializeCards () {
       cards.push({
         suit: suit,
         num: num,
-        status: "back"
+        status: CARD_STATUS.BACK
       });
     }
   }
@@ -29,7 +41,7 @@ function shuffle(cards) {
 }
 
 export default function Field () {
-  const [cards, setCards] = useState(initializeCards);
+  const [cards, dispatch] = useReducer(cardReducer, null, initializeCards);
   const openedIndex = useRef([]);
   const waiting = useRef(false);
   const Cards = [];
@@ -45,12 +57,13 @@ export default function Field () {
 
   function open(index){
     if (waiting.current){ return false; }
-    if (cards[index].status !== "back") { return false;}
+    if (cards[index].status !== CARD_STATUS.BACK) { return false;}
     waiting.current = true;
-    openedIndex.current.push(index);
-    let nextCards = cards.slice();
-    nextCards[index]["status"] = "open";
-    setCards(nextCards);
+    openedIndex.current.push(Number(index));
+    dispatch({
+      type: CARD_ACTION.OPEN,
+      ids: [Number(index)]
+    });
     if (openedIndex.current.length > 1){
       setTimeout(cardCheck, 500);
       return false;
@@ -60,23 +73,50 @@ export default function Field () {
   }
 
   function cardCheck() {
-    let card1Index = openedIndex.current[0];
-    let card2Index = openedIndex.current[1];
+    let [card1Index, card2Index] = openedIndex.current;
     const card1 = cards[card1Index];
     const card2 = cards[card2Index];
-    let nextCards = cards.slice();
     if( card1.num === card2.num ){
-      card1.status = "clear";
-      card2.status = "clear";
+      dispatch({
+        type: CARD_ACTION.CLEAR,
+        ids: openedIndex.current
+      });
     }else{
-      card1.status = "back";
-      card2.status = "back";
+      dispatch({
+        type: CARD_ACTION.CLOSE,
+        ids: openedIndex.current
+      });
     }
-    nextCards[card1Index] = card1;
-    nextCards[card2Index] = card2;
-    setCards(nextCards);
     waiting.current = false;
     openedIndex.current = [];
     return false;
+  }
+
+  function cardReducer(cards, action) {
+    switch(action.type){
+      case CARD_ACTION.OPEN:
+        return cards.map((card, index) => {
+          if(action.ids.includes(index)){
+            card.status = CARD_STATUS.OPEN;
+          }
+          return card;
+        });
+      case CARD_ACTION.CLOSE:
+        return cards.map((card, index) => {
+          if(action.ids.includes(index)){
+            card.status = CARD_STATUS.BACK;
+          }
+          return card;
+        });
+      case CARD_ACTION.CLEAR:
+        return cards.map((card, index) => {
+          if(action.ids.includes(index)){
+            card.status = CARD_STATUS.CLEAR;
+          }
+          return card;
+        });
+      default:
+        return cards;
+    }
   }
 }
